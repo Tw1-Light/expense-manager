@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Expense Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <div class="container mx-auto p-6 max-w-4xl">
+
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-700"> Expense Manager</h1>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                    <div class="p-4 rounded mb-2 text-white
+                        {% if category == 'success' %}bg-green-500
+                        {% elif category == 'warning' %}bg-yellow-500
+                        {% elif category == 'error' %}bg-red-500
+                        {% else %}bg-blue-500
+                        {% endif %}
+                    ">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Add Expense Form -->
+        <form method="POST" action="/add_expense" class="mb-6 bg-white shadow-md rounded p-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-600">Add Expense</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="date" name="date" required class="p-2 border rounded w-full" placeholder="Date">
+                <input type="text" name="description" required class="p-2 border rounded w-full" placeholder="Description">
+                <input type="number" step="0.01" name="amount" required class="p-2 border rounded w-full" placeholder="Amount">
+                <select name="category" required class="p-2 border rounded w-full">
+                    <option disabled selected value="">Select Category</option>
+                    <option>Groceries</option>
+                    <option>Medical</option>
+                    <option>Utilities</option>
+                    <option>Entertainment</option>
+                    <option>Transportation</option>
+                    <option>Others</option>
+                </select>
+                <input type="text" name="vendor" class="p-2 border rounded w-full" placeholder="Vendor (Optional)">
+            </div>
+            <button type="submit" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Add Expense</button>
+        </form>
+
+        <!-- Set Budget Form -->
+        <form method="POST" action="/set_budget" class="mb-6 bg-white shadow-md rounded p-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-600">Set Budget</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <select name="category" required class="p-2 border rounded w-full">
+                    <option disabled selected value="">Select Category</option>
+                    <option>Groceries</option>
+                    <option>Medical</option>
+                    <option>Utilities</option>
+                    <option>Entertainment</option>
+                    <option>Transportation</option>
+                    <option>Others</option>
+                </select>
+                <input type="number" step="0.01" name="amount" required class="p-2 border rounded w-full" placeholder="Budget Amount">
+            </div>
+            <button type="submit" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Set Budget</button>
+        </form>
+
+        <!-- Upload Bill (OCR & AI) -->
+        <form action="/upload_bill" method="POST" enctype="multipart/form-data" class="mb-6 bg-white shadow-md rounded p-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-600">Upload Bill (AI Prediction)</h2>
+            <input type="file" name="bill" required class="p-2 border rounded w-full mb-2">
+            <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded">Upload & Predict</button>
+        </form>
+
+        <!-- Expenses Table -->
+        <div class="bg-white shadow-md rounded p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-600">All Expenses</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="p-2 border">Date</th>
+                            <th class="p-2 border">Description</th>
+                            <th class="p-2 border">Amount</th>
+                            <th class="p-2 border">Category</th>
+                            <th class="p-2 border">Vendor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr class="text-center border-t">
+                            <td class="p-2">{{ expense[1] }}</td>
+                            <td class="p-2">{{ expense[2] }}</td>
+                            <td class="p-2">₹{{ expense[3] }}</td>
+                            <td class="p-2">{{ expense[4] }}</td>
+                            <td class="p-2">{{ expense[5] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Budget Summary -->
+        <div class="bg-white shadow-md rounded p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-600">Budget Summary</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for category, budget in budgets %}
+                    {% set spent = total_by_category.get(category, 0) %}
+                    <div class="p-4 rounded border
+                        {% if spent > budget %}
+                            border-red-500 bg-red-100
+                        {% else %}
+                            border-green-500 bg-green-100
+                        {% endif %}
+                    ">
+                        <p class="font-semibold text-lg">{{ category }}</p>
+                        <p>Budget: ₹{{ "%.2f"|format(budget) }}</p>
+                        <p>Spent: ₹{{ "%.2f"|format(spent) }}</p>
+                        {% if spent > budget %}
+                            <p class="text-red-600 font-semibold">Over Budget!</p>
+                        {% else %}
+                            <p class="text-green-600 font-semibold">Under Budget</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
